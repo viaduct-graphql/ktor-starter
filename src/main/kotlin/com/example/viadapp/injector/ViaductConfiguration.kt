@@ -7,17 +7,15 @@ import viaduct.service.SchemaScopeInfo
 import viaduct.service.TenantRegistrationInfo
 import viaduct.service.api.Viaduct
 
-class ViaductConfiguration {
-    private val codeInjector: KtorTenantCodeInjector = KtorTenantCodeInjector()
-
-    fun viaductService(): Viaduct =
+object ViaductConfiguration {
+    val viaductService: Viaduct by lazy {
         BasicViaductFactory.create(
             schemaRegistrationInfo = SchemaRegistrationInfo(
                 scopes = listOf(SchemaScopeInfo(SCHEMA_ID)),
             ),
             tenantRegistrationInfo = TenantRegistrationInfo(
-                tenantPackagePrefix = "com.example.viadapp",
-                tenantCodeInjector = codeInjector
+                tenantPackagePrefix = "com.example.viadapp"
             )
         )
+    }
 }
