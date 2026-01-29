@@ -1,7 +1,6 @@
 package com.example.viadapp
 
 import com.example.viadapp.injector.ViaductConfiguration
-import graphql.ExecutionResult
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -15,6 +14,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.future.await
 import viaduct.service.api.ExecutionInput
+import viaduct.service.api.ExecutionResult
 
 fun Application.configureRouting() {
     val viaduct = ViaductConfiguration.viaductService
@@ -62,7 +62,7 @@ fun Application.configureRouting() {
 
                     else -> {
                         val statusCode = when {
-                            result.isDataPresent && result.errors.isNotEmpty() -> HttpStatusCode.BadRequest
+                            result.errors.isNotEmpty() -> HttpStatusCode.BadRequest
                             else -> HttpStatusCode.OK
                         }
                         call.respond(statusCode, result.toSpecification())

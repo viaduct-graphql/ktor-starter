@@ -11,8 +11,6 @@ application {
 
 viaductApplication {
     modulePackagePrefix.set("com.example.viadapp")
-    // Disable automatic BOM/dependency injection - we manage dependencies explicitly
-    applyBOM.set(false)
 }
 
 dependencies {
