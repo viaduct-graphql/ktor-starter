@@ -1,3 +1,4 @@
+// tag::ktor-graphql-routing[55] Ktor GraphQL and GraphiQL routing setup
 package com.example.viadapp
 
 import com.example.viadapp.injector.ViaductConfiguration
@@ -56,7 +57,7 @@ fun Application.configureRouting() {
                     // This handles the introspection query returning the GraphQL Schema
                     request["operationName"] == "IntrospectionQuery" -> {
                         @Suppress("UNCHECKED_CAST")
-                        val data = result.getData<Any>() as Map<String, Any>
+                        val data = result.getData() as Map<String, Any>
                         call.respond(HttpStatusCode.OK, mapOf("data" to data))
                     }
 
