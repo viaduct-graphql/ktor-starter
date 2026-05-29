@@ -17,9 +17,10 @@ import kotlinx.coroutines.future.await
 import viaduct.service.BasicViaductFactory
 import viaduct.service.SchemaScopeInfo
 import viaduct.service.api.ExecutionInput
-import viaduct.service.api.ExecutionResult
 import viaduct.service.wiring.graphiql.GraphiQLHtmlConfig
 import viaduct.service.wiring.graphiql.graphiQLHtml
+
+private val graphiQLJsFiles = setOf("global-id-plugin.jsx", "jsx-loader.js")
 
 private val ktorStarterGraphiQLConfig = GraphiQLHtmlConfig(
     title = "GraphiQL - ktor-starter",
@@ -60,7 +61,7 @@ fun Application.configureRouting() {
                     variables = (request["variables"] as? Map<String, Any>) ?: emptyMap(),
                 )
 
-                val result: ExecutionResult = viaduct.executeAsync(executionInput).await()
+                val result = viaduct.executeAsync(executionInput).await()
                 call.respond(result.toSpecification())
             }
         }
@@ -84,18 +85,17 @@ fun Application.configureRouting() {
         route("/js") {
             get("/{filename}") {
                 val filename = call.parameters["filename"]
-                if (filename == null || filename.contains('/') || filename.contains('\\')) {
+                if (filename == null || filename !in graphiQLJsFiles) {
                     call.respond(HttpStatusCode.NotFound, "JavaScript resource not found")
                     return@get
                 }
 
                 val resource = this::class.java.classLoader.getResource("graphiql/js/$filename")
-                if (resource == null) {
+                if (resource != null) {
+                    call.respondText(resource.readText(), ContentType.Application.JavaScript)
+                } else {
                     call.respond(HttpStatusCode.NotFound, "JavaScript resource not found")
-                    return@get
                 }
-
-                call.respondText(resource.readText(), ContentType.Text.JavaScript)
             }
         }
     }
