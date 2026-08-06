@@ -1,10 +1,8 @@
-rootProject.name = "viaduct-ktor-starter"
-
-val viaductVersion: String by settings
-
 // When part of composite build, use local gradle-plugins
 // When standalone, use Maven Central (only after version is published)
 pluginManagement {
+    val viaductVersion: String by settings
+
     if (gradle.parent != null) {
         includeBuild("../../gradle-plugins")
     } else {
@@ -13,11 +11,26 @@ pluginManagement {
             if (System.getenv("USE_VIADUCT_SNAPSHOT_REPO")?.toBoolean() == true) {
                 maven("https://central.sonatype.com/repository/maven-snapshots/")
             }
-            mavenCentral()
-            gradlePluginPortal()
+            val artifactoryMirror = System.getenv("VIADUCT_ARTIFACTORY_MIRROR")
+            if (artifactoryMirror != null) {
+                maven { url = uri(artifactoryMirror) }
+            } else {
+                gradlePluginPortal()
+            }
         }
     }
+    plugins {
+        id("com.airbnb.viaduct.settings-gradle-plugin") version viaductVersion
+    }
 }
+
+plugins {
+    id("com.airbnb.viaduct.settings-gradle-plugin")
+}
+
+rootProject.name = "viaduct-ktor-starter"
+
+val viaductVersion: String by settings
 
 dependencyResolutionManagement {
     repositories {
@@ -25,15 +38,40 @@ dependencyResolutionManagement {
         if (System.getenv("USE_VIADUCT_SNAPSHOT_REPO")?.toBoolean() == true) {
             maven("https://central.sonatype.com/repository/maven-snapshots/")
         }
-        mavenCentral()
-        gradlePluginPortal()
+        val artifactoryMirror = System.getenv("VIADUCT_ARTIFACTORY_MIRROR")
+        if (artifactoryMirror != null) {
+            maven { url = uri(artifactoryMirror) }
+        } else {
+            mavenCentral()
+        }
     }
     versionCatalogs {
         create("libs") {
             from(files("gradle/viaduct.versions.toml"))
             version("viaduct", viaductVersion)
+            // Allow CI to override Kotlin/KSP versions for matrix testing without
+            // touching the toml.  The two vars must be set together — a mismatched
+            // pair (e.g. Kotlin 2.2 with a KSP 2.1 prefix) will fail at build time
+            // with a confusing error, so we catch the mismatch here instead.
+            // See demoapps/ksp-versioning.md for the supported (kotlin, ksp) pairs.
+            val kotlinVer = System.getenv("KOTLIN_VERSION")
+            val kspVer    = System.getenv("KSP_VERSION")
+            require((kotlinVer == null) == (kspVer == null)) {
+                "KOTLIN_VERSION and KSP_VERSION must be set together (got " +
+                "KOTLIN_VERSION=$kotlinVer, KSP_VERSION=$kspVer)"
+            }
+            kotlinVer?.let { version("kotlin", it) }
+            kspVer?.let    { version("ksp",    it) }
         }
     }
 }
 
-include(":resolvers")
+includeViaductApplication {
+    project(":")
+    modulePackagePrefix("com.example.viadapp")
+
+    includeModule {
+        project(":resolvers")
+        modulePackageSuffix("resolvers")
+    }
+}

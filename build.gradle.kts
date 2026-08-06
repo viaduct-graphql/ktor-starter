@@ -9,10 +9,6 @@ application {
     mainClass.set("com.example.viadapp.ViaductServiceKt")
 }
 
-viaductApplication {
-    modulePackagePrefix.set("com.example.viadapp")
-}
-
 dependencies {
     implementation(libs.viaduct.api)
     implementation(libs.viaduct.runtime)
@@ -31,12 +27,9 @@ dependencies {
 
     runtimeOnly(libs.logback.classic)
 
-    implementation(project(":resolvers"))
-
     // Import JUnit BOM to control all JUnit versions consistently
     testImplementation(enforcedPlatform(libs.junit.bom))
     testImplementation(libs.ktor.server.test.host)
-    testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.junit.jupiter)
 
     testRuntimeOnly(libs.junit.platform.launcher)

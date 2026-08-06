@@ -13,7 +13,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import kotlinx.coroutines.future.await
 import viaduct.service.BasicViaductFactory
 import viaduct.service.SchemaScopeInfo
 import viaduct.service.api.ExecutionInput
@@ -33,9 +32,11 @@ private val ktorStarterGraphiQLConfig = GraphiQLHtmlConfig(
     storageKey = "ktor-starter",
 )
 
+private val defaultSchema = SchemaScopeInfo.Scoped(SCHEMA_ID, setOf(DEFAULT_SCOPE_ID))
+
 private val viaduct by lazy {
     BasicViaductFactory.create(
-        scopedSchemas = listOf(SchemaScopeInfo(SCHEMA_ID)),
+        scopedSchemas = listOf(defaultSchema),
     )
 }
 
@@ -61,7 +62,7 @@ fun Application.configureRouting() {
                     variables = (request["variables"] as? Map<String, Any>) ?: emptyMap(),
                 )
 
-                val result = viaduct.executeAsync(executionInput).await()
+                val result = viaduct.execute(executionInput, defaultSchema.schemaId)
                 call.respond(result.toSpecification())
             }
         }
